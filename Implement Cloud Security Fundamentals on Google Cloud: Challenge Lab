@@ -4,6 +4,110 @@
 This document provides instructions and code snippets for setting up a Google Cloud lab environment with specific tasks.
 
 ## Export Zone and Region
+
 ```bash
 export ZONE="us-west1"
 export REGION="us-west1"
+
+# Task 1. Create a custom security role
+
+
+## Create a Custom Role YAML file:
+
+Create a file named orca_storage_editor_410.yaml with the following content:
+
+title: Orca Storage Editor 410
+description: Provides permissions for creating and updating storage objects in Cloud Storage buckets.
+stage: ALPHA
+includedPermissions:
+  - storage.buckets.create
+  - storage.buckets.delete
+  - storage.buckets.get
+  - storage.buckets.list
+  - storage.objects.create
+  - storage.objects.delete
+  - storage.objects.get
+  - storage.objects.list
+  - storage.objects.update
+
+## Use this to create the Custom IAM Rules from the YAML File:
+```bash
+gcloud iam roles create orca_storage_editor_410 --project=PROJECT_ID --file=orca_storage_editor_410.yaml
+
+**Change the file names accordingly**
+
+# Task 2. Create a service account
+To Create the Service Account Use the Google Cloud Console
+Navigation MEnu>> IAM >> Service Account >> Create Service Accounts
+
+Fill the name of the Account
+
+Provide Required Permision using the GUI
+1: roles/monitoring.viewer
+2: roles/monitoring.metricWriter
+3: roles/logging.logWriter
+
+Also bind the Custom Rule created using the Yaml file in Task 1
+Click Custom >> scroll Down>> Orca_storage_editor_410 
+
+## Check Progress for Task 2 and 3
+
+# Task 4: Create and configure a new Kubernetes Engine private cluster
+
+  ### The required subnet is already created just mentioned the correct Network and Subnet flags
+```bash
+gcloud beta container clusters create orca-cluster-354 \
+    --service-account=orca-private-cluster-438-sa@qwiklabs-gcp-01-14865954b455.iam.gserviceaccount.com \
+    --enable-private-nodes \
+    --enable-ip-alias \
+    --enable-private-endpoint \
+    --master-ipv4-cidr 172.16.0.32/28 \
+    --network=orca-build-vpc \
+    --subnetwork orca-build-subnet \
+    --zone=$ZONE
+
+# Add the internal ip-address of the orca-jumphost compute instance to the master authorized network list
+```bash
+gcloud container clusters update orca-cluster-354 \
+    --enable-master-authorized-networks \
+    --master-authorized-networks [MY_INTERNAL_RANGE]/32
+
+## Check Progress for Task 4
+
+
+## Task 5: Deploy the Application
+
+### SSH into source-instance with:
+gcloud compute ssh source-instance --zone=$ZONE
+
+** IMPORTANT to Export ZONE here **
+
+export ZONE="us-west1"
+
+## Run the Following Commands to install Kubectl and Cloud-SDK
+
+sudo apt-get install kubectl
+
+## Configure access to the Kubernetes cluster from SSH shell with:
+
+sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
+gcloud container clusters get-credentials private-cluster --zone=$ZONE
+
+## Verify that your cluster nodes do not have external IP addresses:
+
+kubectl get nodes --output yaml | grep -A4 addresses
+
+
+## DEPLOY THE TEST APPLICATION Using:
+
+kubectl create deployment hello-server --image=gcr.io/google-samples/hello-app:1.0
+
+
+## Check Progress for Task 5.
+
+
+********************************************CHALLENGE LAB COMPLETED************************************************
+
+
+
+
