@@ -1,0 +1,9 @@
+# Google Cloud Lab Setup
+
+## Introduction
+This document provides instructions and code snippets for setting up a Google Cloud lab environment with specific tasks.
+
+## Export Zone and Region
+```bash
+export ZONE="us-west1"
+export REGION="us-west1"
